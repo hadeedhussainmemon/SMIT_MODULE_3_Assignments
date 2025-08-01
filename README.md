@@ -1,1 +1,0 @@
-# SMIT_MODULE_3_Assignments
