@@ -2,8 +2,8 @@
 
 const express = require('express');
 const app = express();
-
 app.use(express.json()); // Middleware to parse JSON bodies
+const path = require('path');
 
 let products = [
     {
@@ -109,9 +109,8 @@ app.listen(3000, () => {
 })
 
 
-app.post('/', (req, res) => {
-    res.send("For Products, please visit /products" + ", for adding products, please use /add" + ", for update use /update" + " and for deleting use /delete");
-})
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));})
 
 app.get('/products', (req, res) => {
     res.send(products);
@@ -122,34 +121,39 @@ const user = true
 
 app.post('/add', (req, res) => {
     if (user) {
-        const newProduct = req.body;
+        const newProduct = req.body; // get new product data from body
+        newProduct.id = products.length + 1; // assign a new ID
         products.push(newProduct);
-        res.send("Product added successfully" + "Product Added:" + newProduct.title);
+        res.send("Product added successfully: " + newProduct.id);
     } else {
         res.status(401).send("Product Added Failed: Unauthorized User");
     }
 })
 
-app.post('/update', (req, res) => {
+app.put('/update/:id', (req, res) => {
     if (user) {
-        const updatedProduct = req.body;
-        const index = products.findIndex(product => product.id === updatedProduct.id);
+        const productId = parseInt(req.params.id);  // convert to number
+        const newData = req.body;  // get new product data from body
+        const index = products.findIndex(product => product.id === productId);
+
         if (index !== -1) {
-            products[index] = updatedProduct;
-            res.send("Product updated successfully" + "Product Updated:" + updatedProduct.title);
-        } else {
+            products[index] = { ...products[index], ...newData }; // merge updates
+            res.send("Product updated successfully: " + products[index].title);
+        }
+        else {
             res.status(404).send("Product not found");
         }
-    } else {
+    }
+    else {
         res.status(401).send("Product Update Failed: Unauthorized User");
     }
 })
 
-app.post('/delete', (req, res) => {
+app.delete('/delete/:id', (req, res) => {
     if (user) {
-        const productId = req.body.id;
+        const productId = parseInt(req.params.id);
         products = products.filter(product => product.id !== productId);
-        res.send("Product deleted successfully" + "Product Deleted ID:" + productId);
+        res.send("Product deleted successfully. Deleted ID: " + productId);
     } else {
         res.status(401).send("Product Deletion Failed: Unauthorized User");
     }
