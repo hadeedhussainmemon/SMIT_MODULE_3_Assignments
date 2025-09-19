@@ -86,4 +86,31 @@ app.use("/logout", (req, res) => {
   res.send("Logout Successfully !");
 });
 
+
+app.use("/me", async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      throw new Error("Authentication Invalid !");
+    }
+    const decoded = await jwt.verify(token, "Hadeed@4321");
+    const user
+      = await User.findById(decoded.id).select("-password -__v -createdAt -updatedAt");
+    if (!user) {
+      throw new Error("User not found !");
+    }
+    res.send({
+      message: "User found !",
+      data: user,
+    });
+  } catch (error) {
+    res.status(400).send({
+      message: "Error fetching user !",
+      error: error.message,
+    });
+  }
+});
+
+
+
 module.exports = router;
